@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+psycopg2
+pydantic
+python-dotenv
+email-validator
+websockets
+anyio
+h11
