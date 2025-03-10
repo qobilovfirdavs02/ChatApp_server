@@ -10,7 +10,8 @@ app = FastAPI()
 load_dotenv()
 
 # CORS sozlamalari
-app.add_middleware(
+def setup_cors(app):
+    app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Agar faqat bitta client bo‘lsa, masalan: "http://192.168.99.253"
     allow_credentials=True,
