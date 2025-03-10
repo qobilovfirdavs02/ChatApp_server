@@ -1,9 +1,13 @@
 # config.py
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 # FastAPI ilovasini yaratish
 app = FastAPI()
+
+load_dotenv()
 
 # CORS sozlamalari
 app.add_middleware(
