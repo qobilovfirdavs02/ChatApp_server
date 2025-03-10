@@ -1,0 +1,32 @@
+# Python fayllari
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env
+*.env
+*.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE konfiguratsiyalari
+.vscode/
+.idea/
+*.iml
+
+# Pytest va test natijalari
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+
+# FastAPI statik va media fayllari
+/staticfiles/
+/media/
+
+# Docker va container fayllari
+.dockerignore
+docker-compose.override.yml
