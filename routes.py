@@ -1,4 +1,5 @@
 # routes.py
+from fastapi import APIRouter
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from config import app
 from models import UserRegister, UserLogin, PasswordReset, VerifyResetCode, NewPassword
@@ -7,14 +8,16 @@ import random
 from database import get_db
 from utils import hash_password, send_reset_code
 import json
+from fastapi import APIRouter
 from datetime import datetime
+router = APIRouter()
 
 # Foydalanuvchilarni saqlash (WebSocket uchun)
 active_connections = {}  # {username: WebSocket}
 
 # routes.py (faqat WebSocket qismi yangilandi)
 # routes.py (faqat WebSocket qismi yangilandi)
-@app.websocket("/ws/{username}/{receiver}")
+@router.websocket("/ws/{username}/{receiver}")
 async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str):
     # Ulanishni qabul qilish
     await websocket.accept()
@@ -120,7 +123,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str)
 
 
 # Register endpoint
-@app.post("/register")
+@router.post("/register")
 async def register(user: UserRegister):
     with get_db() as conn:
         cursor = conn.cursor()
@@ -136,7 +139,7 @@ async def register(user: UserRegister):
             raise HTTPException(status_code=400, detail="Username yoki email allaqachon mavjud")
 
 # Login endpoint
-@app.post("/login")
+@router.post("/login")
 async def login(user: UserLogin):
     with get_db() as conn:
         cursor = conn.cursor()
@@ -151,7 +154,7 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=401, detail="Username yoki parol noto‘g‘ri")
 
 # Parolni tiklash uchun kod yuborish
-@app.post("/reset-password")
+@router.post("/reset-password")
 async def reset_password(data: PasswordReset):
     reset_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
     with get_db() as conn:
@@ -165,7 +168,7 @@ async def reset_password(data: PasswordReset):
     return {"message": "Tiklash kodi emailingizga yuborildi"}
 
 # Reset kodni tekshirish
-@app.post("/verify-reset-code")
+@router.post("/verify-reset-code")
 async def verify_reset_code(data: VerifyResetCode):
     with get_db() as conn:
         cursor = conn.cursor()
@@ -179,7 +182,7 @@ async def verify_reset_code(data: VerifyResetCode):
         raise HTTPException(status_code=400, detail="Kod noto‘g‘ri yoki email topilmadi")
 
 # Yangi parolni o‘rnatish
-@app.post("/set-new-password")
+@router.post("/set-new-password")
 async def set_new_password(data: NewPassword):
     with get_db() as conn:
         cursor = conn.cursor()
@@ -194,7 +197,7 @@ async def set_new_password(data: NewPassword):
         return {"message": "Yangi parol muvaffaqiyatli o‘rnatildi"}
 
 # Userlarni izlash
-@app.get("/users")
+@router.get("/users")
 async def get_users(query: str = ""):
     with get_db() as conn:
         cursor = conn.cursor()
