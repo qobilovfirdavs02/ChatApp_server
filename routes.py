@@ -156,8 +156,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str)
                     "content": msg["content"],
                     "timestamp": msg["timestamp"].isoformat(),
                     "edited": msg["edited"],
-                    "reaction": msg["reaction"],
-                    "reply_to_id": msg["reply_to_id"]
+                    "reaction": msg["reaction"] if msg["reaction"] else None,  # Null bo‘lsa None qaytaradi
+                    "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None  # Null bo‘lsa None
                 })
 
     try:
@@ -184,33 +184,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str)
                         "timestamp": datetime.now().isoformat(),
                         "edited": False,
                         "reaction": None,
-                        "reply_to_id": reply_to_id
-                    }
-                    if receiver in active_connections:
-                        await active_connections[receiver].send_json(msg)
-                    await websocket.send_json(msg)
-                elif action == "edit":
-                     pass
-                   
-                elif action == "delete":
-                    pass
-                 
-                elif action == "react":
-                    msg_id = msg_data["msg_id"]
-                    reaction = msg_data["reaction"]
-                    cursor.execute(
-                        "UPDATE messages SET reaction = %s WHERE id = %s AND sender_username = %s",
-                        (reaction, msg_id, username)
-                    )
-                    conn.commit()
-                    msg = {
-                        "msg_id": msg_id,
-                        "sender": username,
-                        "content": content,
-                        "timestamp": datetime.now().isoformat(),
-                        "edited": False,
-                        "reaction": reaction,
-                        "reply_to_id": None
+                        "reply_to_id": reply_to_id if reply_to_id else None
                     }
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
