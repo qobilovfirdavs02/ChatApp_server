@@ -173,14 +173,21 @@ async def get_users(query: str = ""):
         return [{"username": user["username"]} for user in users]
     
 
+# ... boshqa importlar ...
+
 @router.post("/upload")
 async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
     try:
         os.makedirs("uploads", exist_ok=True)
-        file_location = f"uploads/{file.filename}"
+        # Fayl nomini tozalash: bo‘sh joylarni olib tashlash va kengaytmani aniq qilish
+        original_filename = file.filename.replace(" ", "_")
+        if not original_filename.endswith((".jpg", ".jpeg", ".png", ".mp4")):
+            original_filename += ".jpg"  # Default kengaytma
+        file_location = f"uploads/{original_filename}"
         with open(file_location, "wb") as f:
             f.write(await file.read())
         file_url = f"https://web-production-545c.up.railway.app/{file_location}"
+        print(f"File saved at: {file_location}, URL: {file_url}")  # Log uchun
         return {"file_url": file_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fayl yuklash xatosi: {str(e)}")
