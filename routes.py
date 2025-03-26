@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, Form
+from fastapi.staticfiles import StaticFiles
 from config import app
 from models import UserRegister, UserLogin, PasswordReset, VerifyResetCode, NewPassword
 import psycopg2
@@ -11,6 +12,7 @@ import json
 from datetime import datetime
 
 router = APIRouter()
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Foydalanuvchilarni saqlash (WebSocket uchun)
 active_connections = {} 
