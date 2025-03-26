@@ -16,15 +16,9 @@ router = APIRouter()
 active_connections = {} 
 
 
-@app.post("/upload")
-async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
-    file_location = f"uploads/{file.filename}"
-    os.makedirs("uploads", exist_ok=True)
-    with open(file_location, "wb") as f:
-        f.write(await file.read())
-    
-    file_url = f"https://web-production-545c.up.railway.app/{file_location}"
-    return JSONResponse(content={"file_url": file_url})
+
+
+
 
  # {username: WebSocket}
 
@@ -296,3 +290,16 @@ async def get_users(query: str = ""):
         cursor.execute("SELECT username FROM users WHERE username ILIKE %s", (f"%{query}%",))
         users = cursor.fetchall()
         return [{"username": user["username"]} for user in users]
+    
+
+@app.post("/upload")
+async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
+    try:
+        os.makedirs("uploads", exist_ok=True)
+        file_location = f"uploads/{file.filename}"
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        file_url = f"https://web-production-545c.up.railway.app/{file_location}"
+        return {"file_url": file_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fayl yuklash xatosi: {str(e)}")
