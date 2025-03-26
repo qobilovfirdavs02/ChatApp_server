@@ -16,130 +16,6 @@ router = APIRouter()
 active_connections = {} 
 
 
-
-
-
-
- # {username: WebSocket}
-
-# WebSocket endpoint
-# @router.websocket("/ws/{username}/{receiver}")
-# async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str):
-#     # Ulanishni qabul qilish
-#     await websocket.accept()
-#     print(f"WebSocket ulanishi qabul qilindi: {username} -> {receiver}")
-
-#     # Username va receiver ni tozalash
-#     username = username.replace("%20", " ").strip()
-#     receiver = receiver.replace("%20", " ").strip()
-#     active_connections[username] = websocket
-#     print(f"Ulanish ochildi: {username} -> {receiver}")
-#     print(f"Active connections: {active_connections.keys()}")
-
-#     # Tarixdagi xabarlarni yuborish
-#     with get_db() as conn:
-#         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)  # dict_cursor
-#         cursor.execute("""
-#             SELECT id, sender_username, content, timestamp, edited, deleted 
-#             FROM messages 
-#             WHERE (sender_username = %s AND receiver_username = %s) 
-#                OR (sender_username = %s AND receiver_username = %s)
-#             ORDER BY timestamp ASC
-#         """, (username, receiver, receiver, username))
-#         messages = cursor.fetchall()
-#         for msg in messages:
-#             if not msg["deleted"]:
-#                 await websocket.send_json({
-#                     "msg_id": msg["id"],
-#                     "sender": msg["sender_username"],
-#                     "content": msg["content"],
-#                     "timestamp": msg["timestamp"].isoformat(),
-#                     "edited": msg["edited"]
-#                 })
-
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-#             msg_data = json.loads(data)
-#             content = msg_data["content"]
-#             action = msg_data.get("action", "send")
-#             print(f"Xabar keldi: {username} -> {receiver}, content: {content}")
-
-#             with get_db() as conn:
-#                 cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-#                 if action == "send":
-#                     cursor.execute(
-#                         "INSERT INTO messages (sender_username, receiver_username, content) VALUES (%s, %s, %s) RETURNING id",
-#                         (username, receiver, content)
-#                     )
-#                     msg_id = cursor.fetchone()["id"]
-#                     conn.commit()
-#                     msg = {
-#                         "msg_id": msg_id,
-#                         "sender": username,
-#                         "content": content,
-#                         "timestamp": datetime.now().isoformat(),
-#                         "edited": False
-#                     }
-#                     if receiver in active_connections:
-#                         await active_connections[receiver].send_json(msg)
-#                     await websocket.send_json(msg)
-#                 elif action == "edit":
-#                     msg_id = msg_data["msg_id"]
-#                     cursor.execute(
-#                         "SELECT timestamp FROM messages WHERE id = %s AND sender_username = %s",
-#                         (msg_id, username)
-#                     )
-#                     result = cursor.fetchone()
-#                     if result:
-#                         sent_time = result["timestamp"]
-#                         if (datetime.now() - sent_time).total_seconds() <= 1800:  # 30 daqiqa
-#                             cursor.execute(
-#                                 "UPDATE messages SET content = %s, edited = TRUE WHERE id = %s AND sender_username = %s",
-#                                 (content, msg_id, username)
-#                             )
-#                             conn.commit()
-#                             msg = {
-#                                 "msg_id": msg_id,
-#                                 "sender": username,
-#                                 "content": content,
-#                                 "timestamp": sent_time.isoformat(),
-#                                 "edited": True
-#                             }
-#                             if receiver in active_connections:
-#                                 await active_connections[receiver].send_json(msg)
-#                             await websocket.send_json(msg)
-#                         else:
-#                             await websocket.send_json({"error": "30 daqiqa o‘tdi"})
-#                     else:
-#                         await websocket.send_json({"error": "Xabar topilmadi"})
-#                 elif action == "delete":
-#                     msg_id = msg_data["msg_id"]
-#                     cursor.execute(
-#                         "UPDATE messages SET deleted = TRUE WHERE id = %s AND sender_username = %s",
-#                         (msg_id, username)
-#                     )
-#                     conn.commit()
-#                     msg = {
-#                         "msg_id": msg_id,
-#                         "sender": username,
-#                         "content": "Xabar o'chirildi",
-#                         "timestamp": datetime.now().isoformat(),
-#                         "edited": False
-#                     }
-#                     if receiver in active_connections:
-#                         await active_connections[receiver].send_json(msg)
-#                     await websocket.send_json(msg)
-
-#     except WebSocketDisconnect:
-#         if username in active_connections:
-#             del active_connections[username]
-#         print(f"{username} uzildi")
-
-# ... (avvalgi kodlar qoladi)
-
-# WebSocket endpoint ichida
-
 @router.websocket("/ws/{username}/{receiver}")
 async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str):
     await websocket.accept()
@@ -292,7 +168,7 @@ async def get_users(query: str = ""):
         return [{"username": user["username"]} for user in users]
     
 
-@app.post("/upload")
+@router.post("/upload")
 async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
     try:
         os.makedirs("uploads", exist_ok=True)
