@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, Form
 from config import app
 from models import UserRegister, UserLogin, PasswordReset, VerifyResetCode, NewPassword
 import psycopg2
+from fastapi.responses import JSONResponse
+import os
 import random
 from database import get_db
 from utils import hash_password, send_reset_code
@@ -11,7 +13,20 @@ from datetime import datetime
 router = APIRouter()
 
 # Foydalanuvchilarni saqlash (WebSocket uchun)
-active_connections = {}  # {username: WebSocket}
+active_connections = {} 
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
+    file_location = f"uploads/{file.filename}"
+    os.makedirs("uploads", exist_ok=True)
+    with open(file_location, "wb") as f:
+        f.write(await file.read())
+    
+    file_url = f"https://web-production-545c.up.railway.app/{file_location}"
+    return JSONResponse(content={"file_url": file_url})
+
+ # {username: WebSocket}
 
 # WebSocket endpoint
 # @router.websocket("/ws/{username}/{receiver}")
@@ -156,8 +171,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str)
                     "content": msg["content"],
                     "timestamp": msg["timestamp"].isoformat(),
                     "edited": msg["edited"],
-                    "reaction": msg["reaction"] if msg["reaction"] else None,  # Null bo‘lsa None qaytaradi
-                    "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None  # Null bo‘lsa None
+                    "reaction": msg["reaction"] if msg["reaction"] else None,  
+                    "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None  
                 })
 
     try:

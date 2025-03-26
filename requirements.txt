@@ -7,3 +7,4 @@ email-validator
 websockets
 anyio
 h11
+python-multipart

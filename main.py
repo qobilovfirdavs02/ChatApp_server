@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from config import DB_PARAMS, setup_cors
+from config import setup_cors
 from database import init_db  # Jadval yaratish uchun
 from routes import router  # Endpointlar uchun
 
@@ -11,6 +11,11 @@ setup_cors(app)
 
 # Routerni qo‘shish
 app.include_router(router)
+
+# Asosiy sahifa (index)
+@app.get("/")
+async def root():
+    return {"message": "API va Server ishlayapti!"}
 
 # Dastur boshlanganda jadval yaratish
 @app.on_event("startup")
