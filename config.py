@@ -28,3 +28,10 @@ DB_PARAMS = {
     "port": "5432",
     "sslmode": "require"
 }
+
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
+# CORS’ni ishga tushirish
+setup_cors(app)

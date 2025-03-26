@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
-from config import app
+from config import app, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 from models import UserRegister, UserLogin, PasswordReset, VerifyResetCode, NewPassword
 import psycopg2
 from fastapi.responses import JSONResponse
@@ -10,12 +10,17 @@ from database import get_db
 from utils import hash_password, send_reset_code
 import json
 from datetime import datetime
+import cloudinary
+import cloudinary.uploader
+
 
 router = APIRouter()
 
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET
+)
 
 # Foydalanuvchilarni saqlash (WebSocket uchun)
 active_connections = {} 
@@ -178,18 +183,15 @@ async def get_users(query: str = ""):
 @router.post("/upload")
 async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
     try:
-        os.makedirs("uploads", exist_ok=True)
-        # Fayl nomini tozalash: bo‘sh joylarni olib tashlash va kengaytmani aniq qilish
-        original_filename = file.filename.replace(" ", "_")
-        if not original_filename.endswith((".jpg", ".jpeg", ".png", ".mp4")):
-            original_filename += ".jpg"  # Default kengaytma
-        file_location = f"uploads/{original_filename}"
-        with open(file_location, "wb") as f:
-            f.write(await file.read())
-        file_url = f"https://web-production-545c.up.railway.app/{file_location}"
-        print(f"File saved at: {file_location}, URL: {file_url}")  # Log uchun
+        # Cloudinary’ga faylni yuklash
+        upload_result = cloudinary.uploader.upload(file.file, 
+            folder="chatapp_media",  # Cloudinary’da papka nomi
+            resource_type="auto"     # Rasm yoki video ekanligini avto aniqlash
+        )
+        file_url = upload_result["secure_url"]  # Xavfsiz HTTPS URL
+        print(f"Uploaded to Cloudinary: {file_url}")  # Log uchun
         return {"file_url": file_url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fayl yuklash xatosi: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Cloudinary yuklash xatosi: {str(e)}")
 
 app.include_router(router)
