@@ -12,6 +12,9 @@ import json
 from datetime import datetime
 
 router = APIRouter()
+
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Foydalanuvchilarni saqlash (WebSocket uchun)
