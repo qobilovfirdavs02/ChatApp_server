@@ -9,3 +9,4 @@ anyio
 h11
 python-multipart
 cloudinary
+asyncpg

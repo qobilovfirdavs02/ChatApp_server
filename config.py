@@ -1,4 +1,3 @@
-# config.py
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -20,13 +19,23 @@ def setup_cors(app):
 )
 
 # NeonDB ulanish sozlamalari
-DB_PARAMS = {
-    "dbname": "chatapp",
-    "user": "neondb_owner",
-    "password": "npg_IvTi7DPg2wOt",
-    "host": "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech",
-    "port": "5432",
-    "sslmode": "require"
+# NEONDB_PARAMS = {
+#     "dbname": os.getenv("NEONDB_DBNAME", "chatapp"),  # chatapp deb belgilash
+#     "user": os.getenv("NEONDB_USER", "neondb_owner"),  # NeonDB username
+#     "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),  # NeonDB password
+#     "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),  # NeonDB host
+#     "port": os.getenv("NEONDB_PORT", "5432"),  # Postgres default port
+#     "sslmode": "require"  # SSL ulanishi talab qilinadi
+# }
+
+# Railway Postgres ulanish sozlamalari
+RAILWAY_DB_PARAMS = {
+    "dbname": os.getenv("RAILWAY_DBNAME", "railway"),  # Railway baza nomi
+    "user": os.getenv("RAILWAY_USER", "postgres"),  # Railway username
+    "password": os.getenv("RAILWAY_PASSWORD", "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt"),  # Railway password
+    "host": os.getenv("RAILWAY_HOST", "yamanote.proxy.rlwy.net"),  # Railway host
+    "port": os.getenv("RAILWAY_PORT", "24114"),  # Railway custom port
+    "sslmode": "require"  # SSL ulanishi talab qilinadi
 }
 
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
