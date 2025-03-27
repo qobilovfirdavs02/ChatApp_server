@@ -29,13 +29,22 @@ def setup_cors(app):
 # }
 
 # Railway Postgres ulanish sozlamalari
-RAILWAY_DB_PARAMS = {
-    "dbname": os.getenv("RAILWAY_DBNAME", "railway"),  # Railway baza nomi
-    "user": os.getenv("RAILWAY_USER", "postgres"),  # Railway username
-    "password": os.getenv("RAILWAY_PASSWORD", "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt"),  # Railway password
-    "host": os.getenv("RAILWAY_HOST", "yamanote.proxy.rlwy.net"),  # Railway host
-    "port": os.getenv("RAILWAY_PORT", "24114"),  # Railway custom port
-    "sslmode": "require"  # SSL ulanishi talab qilinadi
+# RAILWAY_DB_PARAMS = {
+#     "dbname": os.getenv("RAILWAY_DBNAME", "railway"),  # Railway baza nomi
+#     "user": os.getenv("RAILWAY_USER", "postgres"),  # Railway username
+#     "password": os.getenv("RAILWAY_PASSWORD", "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt"),  # Railway password
+#     "host": os.getenv("RAILWAY_HOST", "yamanote.proxy.rlwy.net"),  # Railway host
+#     "port": os.getenv("RAILWAY_PORT", "24114"),  # Railway custom port
+#     "sslmode": "require"  # SSL ulanishi talab qilinadi
+# }
+
+DB_PARAMS = {
+    "dbname": "railway",
+    "user": "postgres",
+    "password": "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt",
+    "host": "yamanote.proxy.rlwy.net",
+    "port": "24114",
+    "sslmode": "require"
 }
 
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
