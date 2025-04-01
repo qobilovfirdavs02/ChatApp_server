@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-psycopg2
+psycopg2-binary
 pydantic
 python-dotenv
 email-validator
@@ -11,3 +11,4 @@ python-multipart
 cloudinary
 asyncpg
 aioredis
+setuptools
