@@ -42,7 +42,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     "edited": msg["edited"],
                     "deleted": msg["deleted"],
                     "reaction": msg["reaction"] if msg["reaction"] else None,
-                    "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None
+                    "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None,
+                    "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
                 } for msg in messages
             ]
             await redis.set(cache_key, json.dumps(msg_list), ex=3600)
@@ -77,7 +78,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "edited": False,
                         "deleted": False,
                         "reaction": None,
-                        "reply_to_id": reply_to_id if reply_to_id else None
+                        "reply_to_id": reply_to_id if reply_to_id else None,
+                        "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
                     }
                     sender_cache_key = f"messages:{username}:{receiver}"
                     cached_messages = await redis.get(sender_cache_key)
@@ -279,14 +281,83 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                                 "edited": msg["edited"],
                                 "deleted": msg["deleted"],
                                 "reaction": msg["reaction"] if msg["reaction"] else None,
-                                "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None
+                                "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None,
+                                "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
                             } for msg in messages
                         ]
                         await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
                         for msg in msg_list:
                             await websocket.send_json(msg)
 
+
+
+
+                elif action == "voice":
+                    file_url = msg_data.get("file_url")
+                    msg_id = msg_data.get("msg_id")
+                    if not file_url or not msg_id:
+                        await websocket.send_json({"error": "file_url and msg_id are required for voice action"})
+                        continue
+                    cursor.execute(
+                        "INSERT INTO messages (sender_username, receiver_username, content, type) VALUES (%s, %s, %s, %s) RETURNING id",
+                        (username, receiver, file_url, "voice")
+                    )
+                    new_msg_id = cursor.fetchone()["id"]
+                    conn.commit()
+                    msg = {
+                        "msg_id": new_msg_id,
+                        "sender": username,
+                        "content": file_url,
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "voice",
+                        "action": "voice"
+                    }
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list.append(msg)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(sender_cache_key, json.dumps([msg]), ex=3600)
+
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list.append(msg)
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(receiver_cache_key, json.dumps([msg]), ex=3600)
+
+                    if receiver in active_connections:
+                        await active_connections[receiver].send_json(msg)
+                    await websocket.send_json(msg)
+
+
+
+
+
+
+
+
     except WebSocketDisconnect:
         if username in active_connections:
             del active_connections[username]
         print(f"{username} uzildi")
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
