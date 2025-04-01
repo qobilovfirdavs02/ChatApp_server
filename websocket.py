@@ -52,7 +52,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     "deleted": msg["deleted"],
                     "reaction": msg["reaction"] if msg["reaction"] else None,
                     "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None,
-                    "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
+                    "type": "text" # Yangi qo‘shildi
                 } for msg in messages
             ]
             await redis.set(cache_key, json.dumps(msg_list), ex=3600)
@@ -293,7 +293,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                                 "deleted": msg["deleted"],
                                 "reaction": msg["reaction"] if msg["reaction"] else None,
                                 "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None,
-                                "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
+                                "type": "text"  # Yangi qo‘shildi
                             } for msg in messages
                         ]
                         await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
