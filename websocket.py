@@ -269,9 +269,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
 
                 elif action == "fetch":
                     sender_cache_key = f"messages:{username}:{receiver}"
+                    logger.info(f"Fetch boshlandi: {username} -> {receiver}")
                     cached_messages = await redis.get(sender_cache_key)
                     if cached_messages:
                         messages = json.loads(cached_messages)
+                        logger.info(f"Redis’dan {len(messages)} ta xabar olindi")
                         for msg in messages:
                             await websocket.send_json(msg)
                     else:
@@ -283,6 +285,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                             ORDER BY timestamp ASC
                         """, (username, receiver, receiver, username))
                         messages = cursor.fetchall()
+                        logger.info(f"DB’dan {len(messages)} ta xabar olindi")
                         msg_list = [
                             {
                                 "msg_id": msg["id"],
@@ -299,6 +302,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
                         for msg in msg_list:
                             await websocket.send_json(msg)
+                    
+                
 
 
 
@@ -358,10 +363,10 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
         logger.info(f"{username} uzildi (WebSocketDisconnect)")
         if username in active_connections:
             del active_connections[username]
-    except Exception as e:
-        logger.error(f"xato yuz berdi: {str(e)}")
-        if username in active_connections:
-            del active_connections[username]
+    # except Exception as e:
+    #     logger.error(f"xato yuz berdi: {str(e)}")
+    #     if username in active_connections:
+    #         del active_connections[username]
         
  
         
