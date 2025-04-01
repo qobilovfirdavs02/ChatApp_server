@@ -224,6 +224,46 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
 
+                elif action == "react":
+                    msg_id = msg_data.get("msg_id")
+                    reaction = msg_data.get("reaction")
+                    if not msg_id or not reaction:
+                        await websocket.send_json({"error": "msg_id and reaction are required"})
+                        continue
+                    cursor.execute(
+                        "UPDATE messages SET reaction = %s WHERE id = %s",
+                        (reaction, msg_id)
+                    )
+                    conn.commit()
+                    msg = {
+                        "action": "react",
+                        "msg_id": msg_id,
+                        "reaction": reaction
+                    }
+                    # Yuboruvchi uchun kesh
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        for m in msg_list:
+                            if m["msg_id"] == msg_id:
+                                m["reaction"] = reaction
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+
+                    # Qabul qiluvchi uchun kesh
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        for m in msg_list:
+                            if m["msg_id"] == msg_id:
+                                m["reaction"] = reaction
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+
+                    if receiver in active_connections:
+                        await active_connections[receiver].send_json(msg)
+                    await websocket.send_json(msg)
+
     except WebSocketDisconnect:
         if username in active_connections:
             del active_connections[username]
