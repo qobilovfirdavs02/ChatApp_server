@@ -125,7 +125,7 @@ async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str =
     try:
         upload_result = cloudinary.uploader.upload(file.file,
             folder="chatapp_media",
-            resource_type="auto"
+            resource_type="auto"  # Cloudinary fayl turini avtomatik aniqlaydi (.ogg qoladi)
         )
         file_url = upload_result["secure_url"]
         logger.info(f"Uploaded to Cloudinary: {file_url}")
