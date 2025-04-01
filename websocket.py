@@ -1,17 +1,15 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 import json
 from datetime import datetime
-import psycopg2.extras
 from database import get_db, get_redis
-import aioredis
+from redis.asyncio import Redis  # Yangi import
+import psycopg2.extras
 
 router = APIRouter()
-
-# Foydalanuvchilarni saqlash (WebSocket uchun)
 active_connections = {}
 
 @router.websocket("/ws/{username}/{receiver}")
-async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str, db=Depends(get_db), redis: aioredis.Redis = Depends(get_redis)):
+async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str, redis: Redis = Depends(get_redis)):
     await websocket.accept()
     username = username.replace("%20", " ").strip()
     receiver = receiver.replace("%20", " ").strip()
@@ -25,8 +23,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
         for msg in messages:
             await websocket.send_json(msg)
     else:
-        # PostgreSQL’dan xabarlarni olish
-        with db as conn:
+        with get_db() as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("""
                 SELECT id, sender_username, content, timestamp, edited, deleted, reaction, reply_to_id 
@@ -48,8 +45,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None
                 } for msg in messages
             ]
-            # Redis’ga keshlash (TTL 1 soat)
-            await redis.set(cache_key, json.dumps(msg_list), expire=3600)
+            await redis.set(cache_key, json.dumps(msg_list), ex=3600)  # ex TTL uchun
             for msg in msg_list:
                 await websocket.send_json(msg)
 

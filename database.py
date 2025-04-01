@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from config import NEONDB_PARAMS, app
-import aioredis
+from redis.asyncio import Redis  # aioredis o‘rniga redis.asyncio
 import os
 
 # NeonDB (PostgreSQL) konfiguratsiyasi
@@ -12,20 +12,16 @@ def get_db():
 # Redis konfiguratsiyasi
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
-# Redis ulanishi
 async def get_redis():
-    redis = await aioredis.create_redis_pool(REDIS_URL)
+    redis = await Redis.from_url(REDIS_URL)  # Redis.from_url ishlatiladi
     try:
         yield redis
     finally:
-        redis.close()
-        await redis.wait_closed()
+        await redis.close()
 
-# Bazani ishga tushirish va jadvallarni yaratish
 def init_db():
     with get_db() as conn:
         cursor = conn.cursor()
-        # Users jadvali
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -35,7 +31,6 @@ def init_db():
                 reset_code VARCHAR(6)
             )
         """)
-        # Messages jadvali
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,

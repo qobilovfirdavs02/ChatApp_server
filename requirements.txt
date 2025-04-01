@@ -10,5 +10,5 @@ h11
 python-multipart
 cloudinary
 asyncpg
-aioredis
+redis
 setuptools
