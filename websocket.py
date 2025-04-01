@@ -65,6 +65,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
             logger.info(f"Qabul qilingan ma'lumot: {data}")
             msg_data = json.loads(data)
             action = msg_data.get("action", "send")
+            logger.info(f"Action: {action}")
 
             with db as conn:
                 cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -89,7 +90,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "deleted": False,
                         "reaction": None,
                         "reply_to_id": reply_to_id if reply_to_id else None,
-                        "type": msg["type"] if msg.get("type") else "text"  # Yangi qo‘shildi
+                        "type": "text" # Yangi qo‘shildi
                     }
                     sender_cache_key = f"messages:{username}:{receiver}"
                     cached_messages = await redis.get(sender_cache_key)
@@ -304,8 +305,10 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
 
                 elif action == "voice":
                     file_url = msg_data.get("file_url")
-                    msg_id = msg_data.get("msg_id")
+                    logger.info(f"Voice action qabul qilindi: {msg_data}")
+                    msg_id = msg_data.get("msg_id", None)
                     if not file_url or not msg_id:
+                        logger.error(f"Xato: file_url={file_url}, msg_id={msg_id}")
                         await websocket.send_json({"error": "file_url and msg_id are required for voice action"})
                         continue
                     cursor.execute(
