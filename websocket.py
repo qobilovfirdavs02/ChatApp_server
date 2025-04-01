@@ -4,13 +4,22 @@ from datetime import datetime
 from database import get_db, get_redis
 from redis.asyncio import Redis
 import psycopg2.extras
+import logging
+
+
+
 
 router = APIRouter()
 active_connections = {}
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @router.websocket("/ws/{username}/{receiver}")
 async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str, db=Depends(get_db), redis: Redis = Depends(get_redis)):
     await websocket.accept()
+    logger.info(f"{username} ulandi")
+
     username = username.replace("%20", " ").strip()
     receiver = receiver.replace("%20", " ").strip()
     active_connections[username] = websocket
@@ -53,6 +62,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
     try:
         while True:
             data = await websocket.receive_text()
+            logger.info(f"Qabul qilingan ma'lumot: {data}")
             msg_data = json.loads(data)
             action = msg_data.get("action", "send")
 
@@ -342,9 +352,15 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
 
 
     except WebSocketDisconnect:
+        logger.info(f"{username} uzildi (WebSocketDisconnect)")
         if username in active_connections:
             del active_connections[username]
-        print(f"{username} uzildi")
+    except Exception as e:
+        logger.error(f"xato yuz berdi: {str(e)}")
+        if username in active_connections:
+            del active_connections[username]
+        
+ 
         
 
 
