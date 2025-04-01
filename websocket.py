@@ -79,11 +79,26 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "reaction": None,
                         "reply_to_id": reply_to_id if reply_to_id else None
                     }
-                    cached_messages = await redis.get(cache_key)
+                    # Yuboruvchi uchun kesh
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         msg_list.append(msg)
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(sender_cache_key, json.dumps([msg]), ex=3600)
+
+                    # Qabul qiluvchi uchun kesh
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list.append(msg)
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(receiver_cache_key, json.dumps([msg]), ex=3600)
+
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
@@ -105,14 +120,28 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "content": new_content,
                         "edited": True
                     }
-                    cached_messages = await redis.get(cache_key)
+                    # Yuboruvchi uchun kesh
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         for m in msg_list:
                             if m["msg_id"] == msg_id:
                                 m["content"] = new_content
                                 m["edited"] = True
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+
+                    # Qabul qiluvchi uchun kesh
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        for m in msg_list:
+                            if m["msg_id"] == msg_id:
+                                m["content"] = new_content
+                                m["edited"] = True
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
@@ -135,14 +164,28 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "delete_for_all": delete_for_all,
                         "content": "This message was deleted" if delete_for_all else None
                     }
-                    cached_messages = await redis.get(cache_key)
+                    # Yuboruvchi uchun kesh
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         for m in msg_list:
                             if m["msg_id"] == msg_id and delete_for_all:
                                 m["content"] = "This message was deleted"
                                 m["deleted"] = True
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+
+                    # Qabul qiluvchi uchun kesh
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        for m in msg_list:
+                            if m["msg_id"] == msg_id and delete_for_all:
+                                m["content"] = "This message was deleted"
+                                m["deleted"] = True
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
@@ -161,11 +204,22 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "action": "delete_permanent",
                         "msg_id": msg_id
                     }
-                    cached_messages = await redis.get(cache_key)
+                    # Yuboruvchi uchun kesh
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         msg_list = [m for m in msg_list if m["msg_id"] != msg_id]
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+
+                    # Qabul qiluvchi uchun kesh
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list = [m for m in msg_list if m["msg_id"] != msg_id]
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
