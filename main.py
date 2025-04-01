@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from config import DB_PARAMS, setup_cors
+from config import NEONDB_PARAMS, setup_cors
 from database import init_db  # Jadval yaratish uchun
 from routes import router  # Endpointlar uchun
 
