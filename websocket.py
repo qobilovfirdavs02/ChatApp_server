@@ -45,7 +45,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None
                 } for msg in messages
             ]
-            await redis.set(cache_key, json.dumps(msg_list), ex=3600)  # expire -> ex
+            await redis.set(cache_key, json.dumps(msg_list), ex=3600)
             for msg in msg_list:
                 await websocket.send_json(msg)
 
@@ -83,12 +83,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         msg_list.append(msg)
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)  # expire -> ex
+                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
 
-                # Qolgan action’lar uchun ham shu o‘zgartirish qo‘llaniladi
                 elif action == "edit":
                     msg_id = msg_data.get("msg_id")
                     new_content = msg_data.get("content")
@@ -113,7 +112,37 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                             if m["msg_id"] == msg_id:
                                 m["content"] = new_content
                                 m["edited"] = True
-                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)  # expire -> ex
+                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
+                    if receiver in active_connections:
+                        await active_connections[receiver].send_json(msg)
+                    await websocket.send_json(msg)
+
+                elif action == "delete":
+                    msg_id = msg_data.get("msg_id")
+                    delete_for_all = msg_data.get("delete_for_all", False)
+                    if not msg_id:
+                        await websocket.send_json({"error": "msg_id is required for delete action"})
+                        continue
+                    if delete_for_all:
+                        cursor.execute(
+                            "UPDATE messages SET deleted = %s WHERE id = %s",
+                            (True, msg_id)
+                        )
+                    conn.commit()
+                    msg = {
+                        "action": "delete",
+                        "msg_id": msg_id,
+                        "delete_for_all": delete_for_all,
+                        "content": "This message was deleted" if delete_for_all else None
+                    }
+                    cached_messages = await redis.get(cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        for m in msg_list:
+                            if m["msg_id"] == msg_id and delete_for_all:
+                                m["content"] = "This message was deleted"
+                                m["deleted"] = True
+                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
@@ -132,12 +161,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "action": "delete_permanent",
                         "msg_id": msg_id
                     }
-                    # Keshni yangilash
                     cached_messages = await redis.get(cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         msg_list = [m for m in msg_list if m["msg_id"] != msg_id]
-                        await redis.set(cache_key, json.dumps(msg_list), expire=3600)
+                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
