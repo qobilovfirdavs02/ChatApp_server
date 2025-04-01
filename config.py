@@ -19,14 +19,14 @@ def setup_cors(app):
 )
 
 # NeonDB ulanish sozlamalari
-# NEONDB_PARAMS = {
-#     "dbname": os.getenv("NEONDB_DBNAME", "chatapp"),  # chatapp deb belgilash
-#     "user": os.getenv("NEONDB_USER", "neondb_owner"),  # NeonDB username
-#     "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),  # NeonDB password
-#     "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),  # NeonDB host
-#     "port": os.getenv("NEONDB_PORT", "5432"),  # Postgres default port
-#     "sslmode": "require"  # SSL ulanishi talab qilinadi
-# }
+NEONDB_PARAMS = {
+    "dbname": os.getenv("NEONDB_DBNAME", "chatapp"),  # chatapp deb belgilash
+    "user": os.getenv("NEONDB_USER", "neondb_owner"),  # NeonDB username
+    "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),  # NeonDB password
+    "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),  # NeonDB host
+    "port": os.getenv("NEONDB_PORT", "5432"),  # Postgres default port
+    "sslmode": "require"  # SSL ulanishi talab qilinadi
+}
 
 # Railway Postgres ulanish sozlamalari
 # RAILWAY_DB_PARAMS = {
@@ -38,14 +38,14 @@ def setup_cors(app):
 #     "sslmode": "require"  # SSL ulanishi talab qilinadi
 # }
 
-DB_PARAMS = {
-    "dbname": "railway",
-    "user": "postgres",
-    "password": "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt",
-    "host": "yamanote.proxy.rlwy.net",
-    "port": "24114",
-    "sslmode": "require"
-}
+# DB_PARAMS = {
+#     "dbname": "railway",
+#     "user": "postgres",
+#     "password": "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt",
+#     "host": "yamanote.proxy.rlwy.net",
+#     "port": "24114",
+#     "sslmode": "require"
+# }
 
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")

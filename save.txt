@@ -117,3 +117,14 @@
 # ... (avvalgi kodlar qoladi)
 
 # WebSocket endpoint ichida
+
+
+
+DB_PARAMS = {
+    "dbname": "chatapp",
+    "user": "neondb_owner",
+    "password": "npg_IvTi7DPg2wOt",
+    "host": "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech",
+    "port": "5432",
+    "sslmode": "require"
+}
