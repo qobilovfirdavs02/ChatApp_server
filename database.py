@@ -1,10 +1,10 @@
 # database.py
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from config import DB_PARAMS, app
+from config import NEONDB_PARAMS, app
 
 def get_db():
-    conn = psycopg2.connect(**DB_PARAMS, cursor_factory=RealDictCursor)
+    conn = psycopg2.connect(**NEONDB_PARAMS, cursor_factory=RealDictCursor)
     return conn
 
 def init_db():
@@ -23,13 +23,16 @@ def init_db():
         # Messages jadvali
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS messages (
-                id SERIAL PRIMARY KEY,
-                sender_username VARCHAR(50),
-                receiver_username VARCHAR(50),
-                content TEXT,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                edited BOOLEAN DEFAULT FALSE,
-                deleted BOOLEAN DEFAULT FALSE
+    id SERIAL PRIMARY KEY,
+    sender_username VARCHAR(255) NOT NULL,
+    receiver_username VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    edited BOOLEAN DEFAULT FALSE,
+    deleted BOOLEAN DEFAULT FALSE,
+    reaction VARCHAR(50),
+    reply_to_id INT,
+    FOREIGN KEY (reply_to_id) REFERENCES messages(id) ON DELETE SET NULL
             )
         """)
         conn.commit()
