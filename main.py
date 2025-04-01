@@ -2,7 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from config import NEONDB_PARAMS, setup_cors
 from database import init_db  # Jadval yaratish uchun
-from routes import router  # Endpointlar uchun
+from routes import router # Endpointlar uchun
+from websocket import router as websocket_routes
 
 app = FastAPI()
 
@@ -11,6 +12,7 @@ setup_cors(app)
 
 # Routerni qo‘shish
 app.include_router(router)
+app.include_router(websocket_routes)
 
 # Dastur boshlanganda jadval yaratish
 @app.on_event("startup")
