@@ -117,20 +117,15 @@ async def get_users(query: str = "", db=Depends(get_db)):
 #         raise HTTPException(status_code=500, detail=f"Cloudinary yuklash xatosi: {str(e)}")
 
 @router.post("/upload")
-async def upload_file(
-    file: UploadFile,
-    sender: str = Form(...),
-    receiver: str = Form(...),
-    type: str = Form(default="text")  # Yangi parametr: type qo‘shildi
-):
+async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
     try:
         upload_result = cloudinary.uploader.upload(file.file,
             folder="chatapp_media",
             resource_type="auto"
         )
         file_url = upload_result["secure_url"]
-        print(f"Uploaded to Cloudinary: {file_url}, Type: {type}")
-        return {"file_url": file_url, "type": type}  # type qaytarildi
+        print(f"Uploaded to Cloudinary: {file_url}")
+        return {"file_url": file_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cloudinary yuklash xatosi: {str(e)}")
 
