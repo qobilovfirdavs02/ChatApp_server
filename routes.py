@@ -10,8 +10,11 @@ from database import get_db
 from utils import hash_password, send_reset_code
 import cloudinary
 import cloudinary.uploader
+import logging
 
 router = APIRouter()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 cloudinary.config(
     cloud_name=CLOUDINARY_CLOUD_NAME,
@@ -118,15 +121,17 @@ async def get_users(query: str = "", db=Depends(get_db)):
 
 @router.post("/upload")
 async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
+    logger.info(f"Upload so‘rovi: sender={sender}, receiver={receiver}, file={file.filename}")
     try:
         upload_result = cloudinary.uploader.upload(file.file,
             folder="chatapp_media",
             resource_type="auto"
         )
         file_url = upload_result["secure_url"]
-        print(f"Uploaded to Cloudinary: {file_url}")
+        logger.info(f"Uploaded to Cloudinary: {file_url}")
         return {"file_url": file_url}
     except Exception as e:
+        logger.error(f"Cloudinary yuklash xatosi: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Cloudinary yuklash xatosi: {str(e)}")
 
 app.include_router(router)
