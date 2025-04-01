@@ -2,14 +2,14 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 import json
 from datetime import datetime
 from database import get_db, get_redis
-from redis.asyncio import Redis  # Yangi import
+from redis.asyncio import Redis
 import psycopg2.extras
 
 router = APIRouter()
 active_connections = {}
 
 @router.websocket("/ws/{username}/{receiver}")
-async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str, redis: Redis = Depends(get_redis)):
+async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str, db=Depends(get_db), redis: Redis = Depends(get_redis)):
     await websocket.accept()
     username = username.replace("%20", " ").strip()
     receiver = receiver.replace("%20", " ").strip()
@@ -23,7 +23,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
         for msg in messages:
             await websocket.send_json(msg)
     else:
-        with get_db() as conn:
+        with db as conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("""
                 SELECT id, sender_username, content, timestamp, edited, deleted, reaction, reply_to_id 
@@ -45,7 +45,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     "reply_to_id": msg["reply_to_id"] if msg["reply_to_id"] else None
                 } for msg in messages
             ]
-            await redis.set(cache_key, json.dumps(msg_list), ex=3600)  # ex TTL uchun
+            await redis.set(cache_key, json.dumps(msg_list), ex=3600)
             for msg in msg_list:
                 await websocket.send_json(msg)
 
@@ -79,42 +79,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         "reaction": None,
                         "reply_to_id": reply_to_id if reply_to_id else None
                     }
-                    # Keshni yangilash
                     cached_messages = await redis.get(cache_key)
                     if cached_messages:
                         msg_list = json.loads(cached_messages)
                         msg_list.append(msg)
-                        await redis.set(cache_key, json.dumps(msg_list), expire=3600)
-                    if receiver in active_connections:
-                        await active_connections[receiver].send_json(msg)
-                    await websocket.send_json(msg)
-
-                elif action == "edit":
-                    msg_id = msg_data.get("msg_id")
-                    new_content = msg_data.get("content")
-                    if not msg_id or not new_content:
-                        await websocket.send_json({"error": "msg_id and content are required for edit action"})
-                        continue
-                    cursor.execute(
-                        "UPDATE messages SET content = %s, edited = %s WHERE id = %s",
-                        (new_content, True, msg_id)
-                    )
-                    conn.commit()
-                    msg = {
-                        "action": "edit",
-                        "msg_id": msg_id,
-                        "content": new_content,
-                        "edited": True
-                    }
-                    # Keshni yangilash
-                    cached_messages = await redis.get(cache_key)
-                    if cached_messages:
-                        msg_list = json.loads(cached_messages)
-                        for m in msg_list:
-                            if m["msg_id"] == msg_id:
-                                m["content"] = new_content
-                                m["edited"] = True
-                        await redis.set(cache_key, json.dumps(msg_list), expire=3600)
+                        await redis.set(cache_key, json.dumps(msg_list), ex=3600)
                     if receiver in active_connections:
                         await active_connections[receiver].send_json(msg)
                     await websocket.send_json(msg)
