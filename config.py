@@ -41,14 +41,7 @@ NEONDB_PARAMS = {
 #     "sslmode": "require"  # SSL ulanishi talab qilinadi
 # }
 
-# DB_PARAMS = {
-#     "dbname": "railway",
-#     "user": "postgres",
-#     "password": "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt",
-#     "host": "yamanote.proxy.rlwy.net",
-#     "port": "24114",
-#     "sslmode": "require"
-# }
+
 
 CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")

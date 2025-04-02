@@ -69,6 +69,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
 
             with db as conn:
                 cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                
                 if action == "send":
                     content = msg_data.get("content")
                     reply_to_id = msg_data.get("reply_to_id")
@@ -230,6 +231,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                     await websocket.send_json(msg)
 
                 elif action == "react":
+                    
                     msg_id = msg_data.get("msg_id")
                     reaction = msg_data.get("reaction")
                     if not msg_id or not reaction:
@@ -302,11 +304,6 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
                         await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
                         for msg in msg_list:
                             await websocket.send_json(msg)
-                    
-                
-
-
-
 
                 elif action == "voice":
                     file_url = msg_data.get("file_url")
