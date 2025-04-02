@@ -25,9 +25,9 @@ async def root():
     return {"message": "Server va API ishlayapti!"}
 
 
-PORT = int(os.getenv("PORT", 8000))  # Railway PORT ni olamiz yoki 8000 default
-HOST = "0.0.0.0"
+PORT = os.getenv("PORT")
+if PORT is None or not PORT.isdigit():
+    PORT = 8000  # Default port agar PORT noto‘g‘ri bo‘lsa
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
+PORT = int(PORT)
+
