@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 from config import NEONDB_PARAMS, setup_cors
-from database import init_db  # Jadval yaratish uchun
-from routes import router  # Endpointlar uchun
+from database import init_db
+from routes import router
 from websocket import router as websocket_routes
 
 app = FastAPI()
@@ -22,10 +22,3 @@ async def startup_event():
 @app.get("/")
 async def root():
     return {"message": "Server va API ishlayapti!"}
-
-# PORT o'zgaruvchisini to'g'ri belgilash
-PORT = 8000  # Manual port, 8000 deb qo'ysangiz
-HOST = "0.0.0.0"
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
