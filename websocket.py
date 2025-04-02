@@ -308,49 +308,49 @@ async def websocket_endpoint(websocket: WebSocket, username: str, receiver: str,
 
 
 
-                # elif action == "voice":
-                #     file_url = msg_data.get("file_url")
-                #     logger.info(f"Voice action qabul qilindi: {msg_data}")
-                #     msg_id = msg_data.get("msg_id", None)
-                #     if not file_url or not msg_id:
-                #         logger.error(f"Xato: file_url={file_url}, msg_id={msg_id}")
-                #         await websocket.send_json({"error": "file_url and msg_id are required for voice action"})
-                #         continue
-                #     cursor.execute(
-                #         "INSERT INTO messages (sender_username, receiver_username, content, type) VALUES (%s, %s, %s, %s) RETURNING id",
-                #         (username, receiver, file_url, "voice")
-                #     )
-                #     new_msg_id = cursor.fetchone()["id"]
-                #     conn.commit()
-                #     msg = {
-                #         "msg_id": new_msg_id,
-                #         "sender": username,
-                #         "content": file_url,
-                #         "timestamp": datetime.now().isoformat(),
-                #         "type": "voice",
-                #         "action": "voice"
-                #     }
-                #     sender_cache_key = f"messages:{username}:{receiver}"
-                #     cached_messages = await redis.get(sender_cache_key)
-                #     if cached_messages:
-                #         msg_list = json.loads(cached_messages)
-                #         msg_list.append(msg)
-                #         await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
-                #     else:
-                #         await redis.set(sender_cache_key, json.dumps([msg]), ex=3600)
+                elif action == "voice":
+                    file_url = msg_data.get("file_url")
+                    logger.info(f"Voice action qabul qilindi: {msg_data}")
+                    msg_id = msg_data.get("msg_id", None)
+                    if not file_url or not msg_id:
+                        logger.error(f"Xato: file_url={file_url}, msg_id={msg_id}")
+                        await websocket.send_json({"error": "file_url and msg_id are required for voice action"})
+                        continue
+                    cursor.execute(
+                        "INSERT INTO messages (sender_username, receiver_username, content, type) VALUES (%s, %s, %s, %s) RETURNING id",
+                        (username, receiver, file_url, "voice")
+                    )
+                    new_msg_id = cursor.fetchone()["id"]
+                    conn.commit()
+                    msg = {
+                        "msg_id": new_msg_id,
+                        "sender": username,
+                        "content": file_url,
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "voice",
+                        "action": "voice"
+                    }
+                    sender_cache_key = f"messages:{username}:{receiver}"
+                    cached_messages = await redis.get(sender_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list.append(msg)
+                        await redis.set(sender_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(sender_cache_key, json.dumps([msg]), ex=3600)
 
-                #     receiver_cache_key = f"messages:{receiver}:{username}"
-                #     cached_messages = await redis.get(receiver_cache_key)
-                #     if cached_messages:
-                #         msg_list = json.loads(cached_messages)
-                #         msg_list.append(msg)
-                #         await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
-                #     else:
-                #         await redis.set(receiver_cache_key, json.dumps([msg]), ex=3600)
+                    receiver_cache_key = f"messages:{receiver}:{username}"
+                    cached_messages = await redis.get(receiver_cache_key)
+                    if cached_messages:
+                        msg_list = json.loads(cached_messages)
+                        msg_list.append(msg)
+                        await redis.set(receiver_cache_key, json.dumps(msg_list), ex=3600)
+                    else:
+                        await redis.set(receiver_cache_key, json.dumps([msg]), ex=3600)
 
-                #     if receiver in active_connections:
-                #         await active_connections[receiver].send_json(msg)
-                #     await websocket.send_json(msg)
+                    if receiver in active_connections:
+                        await active_connections[receiver].send_json(msg)
+                    await websocket.send_json(msg)
 
 
 
