@@ -1,5 +1,4 @@
 import uvicorn
-import os
 from fastapi import FastAPI
 from config import NEONDB_PARAMS, setup_cors
 from database import init_db  # Jadval yaratish uchun
@@ -19,16 +18,14 @@ app.include_router(websocket_routes)
 @app.on_event("startup")
 async def startup_event():
     init_db()
-    
+
 @app.get("/")
 async def root():
     return {"message": "Server va API ishlayapti!"}
 
-
-PORT = os.getenv("PORT", "8000")  # Default 8000
-PORT = int(PORT) if PORT.isdigit() else 8000  # Xato bo'lsa 8000 ni ishlatish
+# Port va hostni qo'lda belgilash
+PORT = 8000  # Manual port, qo'lda belgilash
+HOST = "0.0.0.0"
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
-
+    uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
