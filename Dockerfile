@@ -14,8 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Loyihani konteynerga nusxalash
 COPY . .
 
-# Portni ochish (hujjatlashtirish uchun, dinamik portga ta’sir qilmaydi)
+# entrypoint.sh ni ishlatishga ruxsat berish
+RUN chmod +x entrypoint.sh
+
+# Portni ochish (hujjatlashtirish uchun)
 EXPOSE 8000
 
-# FastAPI serverni shell sintaksisida ishga tushirish
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+# ENTRYPOINT bilan skriptni ishlatish
+ENTRYPOINT ["./entrypoint.sh"]
