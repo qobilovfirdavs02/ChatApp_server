@@ -25,9 +25,10 @@ async def root():
     return {"message": "Server va API ishlayapti!"}
 
 
-PORT = os.getenv("PORT")
-if PORT is None or not PORT.isdigit():
-    PORT = 8000  # Default port agar PORT noto‘g‘ri bo‘lsa
+PORT = os.getenv("PORT", "8000")  # Default 8000
+PORT = int(PORT) if PORT.isdigit() else 8000  # Xato bo'lsa 8000 ni ishlatish
 
-PORT = int(PORT)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
 
