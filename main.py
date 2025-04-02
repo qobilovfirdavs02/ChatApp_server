@@ -1,4 +1,5 @@
 import uvicorn
+import os
 from fastapi import FastAPI
 from config import NEONDB_PARAMS, setup_cors
 from database import init_db  # Jadval yaratish uchun
@@ -22,6 +23,10 @@ async def startup_event():
 @app.get("/")
 async def root():
     return {"message": "Server va API ishlayapti!"}
+
+
+PORT = int(os.getenv("PORT", 8000))  # Railway PORT ni olamiz yoki 8000 default
+HOST = "0.0.0.0"
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
