@@ -53,29 +53,39 @@
 #     init_db()
 
 
+# database.py
 from fastapi import Depends
 from redis.asyncio import Redis
 import asyncpg
 import os
 from typing import AsyncGenerator
-from config import NEONDB_PARAMS, app
+from config import NEONDB_PARAMS
+import logging
 
-# NeonDB (PostgreSQL) configuration with asyncpg
-async def get_db() -> AsyncGenerator[asyncpg.pool.Pool, None]:
-    pool = await asyncpg.create_pool(**NEONDB_PARAMS)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# NeonDB connection
+async def get_db() -> AsyncGenerator[asyncpg.Pool, None]:
     try:
+        pool = await asyncpg.create_pool(**NEONDB_PARAMS)
+        logger.info("NeonDB pool successfully created")
         yield pool
+    except Exception as e:
+        logger.error(f"Failed to connect to NeonDB: {str(e)}", exc_info=True)
+        raise
     finally:
         await pool.close()
+        logger.info("NeonDB pool closed")
 
-# Redis configuration
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
+# Redis connection
 async def get_redis() -> AsyncGenerator[Redis, None]:
+    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     redis = await Redis.from_url(REDIS_URL)
     try:
         yield redis
     finally:
         await redis.close()
+
 
 

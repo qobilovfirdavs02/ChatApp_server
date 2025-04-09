@@ -238,6 +238,14 @@ async def get_users(query: str = "", db: asyncpg.Pool = Depends(get_db)):
         )
         logger.info(f"Users fetched with query: {query}")
         return [{"username": user["username"]} for user in users]
+    
+    # @router.get("/users")
+# async def get_users(query: str = "", db=Depends(get_db)):
+#     with db as conn:
+#         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+#         cursor.execute("SELECT username FROM users WHERE username ILIKE %s", (f"%{query}%",))
+#         users = cursor.fetchall()
+#         return [{"username": user["username"]} for user in users]
 
 
 @router.post("/upload")

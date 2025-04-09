@@ -21,13 +21,21 @@ def setup_cors(app):
 # NeonDB ulanish sozlamalari
 
 
+# NEONDB_PARAMS = {
+#     "dbname": os.getenv("NEONDB_DBNAME", "chatapp"),
+#     "user": os.getenv("NEONDB_USER", "neondb_owner"),
+#     "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),
+#     "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),
+#     "port": os.getenv("NEONDB_PORT", "5432"),
+#     "sslmode": os.getenv("NEONDB_SSLMODE", "require"),
+# }
 NEONDB_PARAMS = {
-    "dbname": os.getenv("NEONDB_DBNAME", "chatapp"),
+    "database": os.getenv("NEONDB_DBNAME", "chatapp"),
     "user": os.getenv("NEONDB_USER", "neondb_owner"),
     "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),
     "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),
-    "port": os.getenv("NEONDB_PORT", "5432"),
-    "sslmode": os.getenv("NEONDB_SSLMODE", "require"),
+    "port": int(os.getenv("NEONDB_PORT", "5432")),  # string emas, int
+    "ssl": True  # NeonDB SSL talab qiladi
 }
 
 
