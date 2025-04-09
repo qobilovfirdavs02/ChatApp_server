@@ -6,6 +6,7 @@ from redis.asyncio import Redis
 import logging
 from typing import Dict, Optional
 import asyncio
+from database import get_db, get_redis
 
 router = APIRouter()
 active_connections: Dict[str, WebSocket] = {}
