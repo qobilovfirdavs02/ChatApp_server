@@ -30,7 +30,8 @@ def setup_cors(app):
 #     "sslmode": os.getenv("NEONDB_SSLMODE", "require"),
 # }
 NEONDB_PARAMS = {
-    "database": os.getenv("NEONDB_DBNAME", "chatapp"),
+    # "database": os.getenv("NEONDB_DBNAME", "chatapp"),
+    "db_name": os.getenv("NEONDB_DBNAME", "chatapp"),
     "user": os.getenv("NEONDB_USER", "neondb_owner"),
     "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),
     "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),
