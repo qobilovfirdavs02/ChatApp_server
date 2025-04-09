@@ -56,18 +56,22 @@
 import asyncpg
 from fastapi import Depends
 import os
-import logging
 from config import app, NEONDB_PARAMS
 from redis.asyncio import Redis
+import ssl
 
 # NeonDB konfiguratsiyasi
-
-logger = logging.getLogger("chatapp")
-logging.basicConfig(level=logging.INFO)
+NEONDB_PARAMS = {
+    "database": os.getenv("NEONDB_DBNAME", "chatapp"),  # dbname -> database
+    "user": os.getenv("NEONDB_USER", "neondb_owner"),
+    "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),
+    "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),
+    "port": os.getenv("NEONDB_PORT", "5432"),
+    "ssl": ssl.SSLContext(ssl.PROTOCOL_TLSv1_2) if os.getenv("NEONDB_SSLMODE", "require") == "require" else None  # sslmode o‘rniga ssl
+}
 
 async def get_db():
     conn = await asyncpg.connect(**NEONDB_PARAMS)
-    logger.info(f"DB connection type: {type(conn)}")
     try:
         yield conn
     finally:
