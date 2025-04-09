@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from config import NEONDB_PARAMS, setup_cors
 from database import init_db
 from routes import router
-from websocket import router as websocket_routes
+# from websocket import router as websocket_routes
+from wss import router as websocket_routes
 
 app = FastAPI()
 

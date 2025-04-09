@@ -1,0 +1,7 @@
+# RAILWAY_DB_PARAMS = {
+#    ("RAILWAY_DBNAME", "railway"), 
+#     ("RAILWAY_USER", "postgres"),  
+#    ("RAILWAY_PASSWORD", "opkEacHlBDiDRQrzSIhipmYgfVcdOjzt"),  
+#     ("RAILWAY_HOST", "yamanote.proxy.rlwy.net"),  
+#     ("RAILWAY_PORT", "24114"),  
+#     "sslmode": "require" 
