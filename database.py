@@ -52,33 +52,26 @@
 # async def startup_event():
 #     init_db()
 
+
 import asyncpg
 from fastapi import Depends
 import os
-from config import NEONDB_PARAMS, app
+import logging
+from config import app, NEONDB_PARAMS
+from redis.asyncio import Redis
 
-# NeonDB (PostgreSQL) konfiguratsiyasi
+# NeonDB konfiguratsiyasi
+
+logger = logging.getLogger("chatapp")
+logging.basicConfig(level=logging.INFO)
+
 async def get_db():
-    # Agar NEONDB_PARAMS ishlatilsa, uni asyncpg bilan moslashtiramiz
-    conn = await asyncpg.connect(
-        user=NEONDB_PARAMS.get("user"),
-        password=NEONDB_PARAMS.get("password"),
-        database=NEONDB_PARAMS.get("dbname"),
-        host=NEONDB_PARAMS.get("host"),
-        port=NEONDB_PARAMS.get("port")
-    )
+    conn = await asyncpg.connect(**NEONDB_PARAMS)
+    logger.info(f"DB connection type: {type(conn)}")
     try:
         yield conn
     finally:
         await conn.close()
-
-# Agar Railway’da DATABASE_URL ishlatmoqchi bo‘lsangiz, quyidagini ishlatishingiz mumkin:
-# async def get_db():
-#     conn = await asyncpg.connect(os.getenv("DATABASE_URL"))
-#     try:
-#         yield conn
-#     finally:
-#         await conn.close()
 
 # Redis konfiguratsiyasi
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -90,15 +83,9 @@ async def get_redis():
     finally:
         await redis.close()
 
-# Jadvallarni yaratish uchun sinxron init_db ni asinxron qilamiz
+# Jadvallarni yaratish uchun asinxron init_db
 async def init_db():
-    async with asyncpg.connect(
-        user=NEONDB_PARAMS.get("user"),
-        password=NEONDB_PARAMS.get("password"),
-        database=NEONDB_PARAMS.get("dbname"),
-        host=NEONDB_PARAMS.get("host"),
-        port=NEONDB_PARAMS.get("port")
-    ) as conn:
+    async with asyncpg.connect(**NEONDB_PARAMS) as conn:
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
