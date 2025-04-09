@@ -124,17 +124,16 @@
 
 
 from fastapi import APIRouter, HTTPException, UploadFile, Form, Depends
-from fastapi.staticfiles import StaticFiles
 from config import app, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 from models import UserRegister, UserLogin, PasswordReset, VerifyResetCode, NewPassword
 from fastapi.responses import JSONResponse
-import os
 import random
 from database import get_db
 from utils import hash_password, send_reset_code
 import cloudinary
 import cloudinary.uploader
 import logging
+import asyncpg
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -156,8 +155,10 @@ async def register(user: UserRegister, db=Depends(get_db)):
                 "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)",
                 user.username, user.email, hashed_password
             )
+            logger.info(f"User registered: {user.username}")
             return {"message": "Foydalanuvchi muvaffaqiyatli ro‘yxatdan o‘tdi"}
-        except asyncpg.exceptions.UniqueViolationError:
+        except asyncpg.exceptions.UniqueViolationError as e:
+            logger.warning(f"Registration failed: {str(e)}")
             raise HTTPException(status_code=400, detail="Username yoki email allaqachon mavjud")
 
 @router.post("/login")
@@ -169,20 +170,24 @@ async def login(user: UserLogin, db=Depends(get_db)):
             user.username, hashed_password
         )
         if result:
+            logger.info(f"User logged in: {user.username}")
             return {"message": "Kirish muvaffaqiyatli", "username": result["username"]}
+        logger.warning(f"Login failed for {user.username}")
         raise HTTPException(status_code=401, detail="Username yoki parol noto‘g‘ri")
 
 @router.post("/reset-password")
 async def reset_password(data: PasswordReset, db=Depends(get_db)):
-    reset_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    reset_code = ''.join(str(random.randint(0, 9)) for _ in range(6))
     async with db as conn:
         result = await conn.execute(
             "UPDATE users SET reset_code = $1 WHERE email = $2",
             reset_code, data.email
         )
-        if result == "UPDATE 0":  # Hech qanday qator yangilanmasa
+        if result == "UPDATE 0":
+            logger.warning(f"Reset password failed: Email not found - {data.email}")
             raise HTTPException(status_code=404, detail="Email topilmadi")
         send_reset_code(data.email, reset_code)
+        logger.info(f"Reset code sent to {data.email}")
         return {"message": "Tiklash kodi emailingizga yuborildi"}
 
 @router.post("/verify-reset-code")
@@ -193,7 +198,9 @@ async def verify_reset_code(data: VerifyResetCode, db=Depends(get_db)):
             data.email, data.reset_code
         )
         if result:
+            logger.info(f"Reset code verified for {data.email}")
             return {"message": "Kod to‘g‘ri"}
+        logger.warning(f"Reset code verification failed for {data.email}")
         raise HTTPException(status_code=400, detail="Kod noto‘g‘ri yoki email topilmadi")
 
 @router.post("/set-new-password")
@@ -205,7 +212,9 @@ async def set_new_password(data: NewPassword, db=Depends(get_db)):
             hashed_password, data.email
         )
         if result == "UPDATE 0":
+            logger.warning(f"Set new password failed: Email not found - {data.email}")
             raise HTTPException(status_code=404, detail="Email topilmadi")
+        logger.info(f"New password set for {data.email}")
         return {"message": "Yangi parol muvaffaqiyatli o‘rnatildi"}
 
 @router.get("/users")
@@ -215,13 +224,14 @@ async def get_users(query: str = "", db=Depends(get_db)):
             "SELECT username FROM users WHERE username ILIKE $1",
             f"%{query}%"
         )
+        logger.info(f"Users fetched with query: {query}")
         return [{"username": user["username"]} for user in users]
 
 @router.post("/upload")
 async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str = Form(...)):
-    logger.info(f"Upload so‘rovi: sender={sender}, receiver={receiver}, file={file.filename}")
+    logger.info(f"Upload request: sender={sender}, receiver={receiver}, file={file.filename}")
     try:
-        upload_result = cloudinary.uploader.upload(
+        upload_result = await cloudinary.uploader.upload(
             file.file,
             folder="chatapp_media",
             resource_type="auto"
@@ -230,7 +240,7 @@ async def upload_file(file: UploadFile, sender: str = Form(...), receiver: str =
         logger.info(f"Uploaded to Cloudinary: {file_url}")
         return {"file_url": file_url}
     except Exception as e:
-        logger.error(f"Cloudinary yuklash xatosi: {str(e)}")
+        logger.error(f"Cloudinary upload error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Cloudinary yuklash xatosi: {str(e)}")
 
 app.include_router(router)
