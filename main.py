@@ -46,8 +46,8 @@ app = FastAPI(
 setup_cors(app)
 
 # Include routers
-app.include_router(router, tags=["API"])  # prefix="/api" olib tashlandi
-app.include_router(websocket_routes, prefix="/ws", tags=["WebSocket"])
+app.include_router(router)
+app.include_router(websocket_routes)
 
 @app.get("/")
 async def root():
