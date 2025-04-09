@@ -56,38 +56,33 @@
 import asyncpg
 from fastapi import Depends
 import os
-from config import app, NEONDB_PARAMS
+from config import NEONDB_PARAMS, app
 from redis.asyncio import Redis
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-NEONDB_PARAMS = {
-    "database": os.getenv("NEONDB_DBNAME", "chatapp"),
-    "user": os.getenv("NEONDB_USER", "neondb_owner"),
-    "password": os.getenv("NEONDB_PASSWORD", "npg_IvTi7DPg2wOt"),
-    "host": os.getenv("NEONDB_HOST", "ep-restless-dawn-a80hwsr5-pooler.eastus2.azure.neon.tech"),
-    "port": os.getenv("NEONDB_PORT", "5432"),
-    "ssl": True  # SSL talab qilinsa
-}
-
+# NeonDB (PostgreSQL) konfiguratsiyasi
 async def get_db():
     conn = await asyncpg.connect(**NEONDB_PARAMS)
-    logger.info(f"DB connection type: {type(conn)}")  # Qaytayotgan obyektni log qilamiz
+    logger.info(f"DB connection type: {type(conn)}")  # Ulanish turini log qilish
     try:
         yield conn
     finally:
         await conn.close()
 
+# Redis konfiguratsiyasi
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
 async def get_redis():
-    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     redis = await Redis.from_url(REDIS_URL)
     try:
         yield redis
     finally:
         await redis.close()
 
+# Jadvallarni yaratish uchun asinxron init_db
 async def init_db():
     async with asyncpg.connect(**NEONDB_PARAMS) as conn:
         await conn.execute("""
